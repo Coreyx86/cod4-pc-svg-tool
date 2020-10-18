@@ -14,13 +14,42 @@ namespace COD4SaveTool
         /// <param name="arr">Array to return int from </param>
         /// <param name="position">Position in the array to start reading</param>
         /// <returns>int stored at the specified position</returns>
-        public static int ReadIntFromByteArray(byte[] arr, int position)
+        public static int ReadIntFromByteArray(byte[] arr, int position, bool littleEndian = true)
         {
             byte[] buffer = new byte[4];
 
             Buffer.BlockCopy(arr, position, buffer, 0, 4);
 
+            if(!littleEndian)
+            {
+                Array.Reverse(buffer);
+            }
+
             return BitConverter.ToInt32(buffer, 0);
+        }
+
+        public static void WriteIntToByteArray(byte[] arr, int position, int value, bool littleEndian = true)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            if (!littleEndian)
+            {
+                Array.Reverse(buffer);
+            }
+
+            for(int i = 0; i < buffer.Length; i++)
+            {
+                Buffer.SetByte(arr, position, buffer[i]);
+            }
+
+        }
+
+        public static void SetByteArrayInArray(byte[] src, int position, byte[] value)
+        {
+            for(int i = 0; i < value.Length; i++)
+            {
+                Buffer.SetByte(src, position + i, value[i]);
+            }
         }
 
 
@@ -42,6 +71,13 @@ namespace COD4SaveTool
                 subset[i] = array[indices[i]];
             }
             return subset;
+        }
+
+        //Greetz to Eamon Nerbonne
+        public static IEnumerable<string> ChunksUpto(string str, int maxChunkSize)
+        {
+            for (int i = 0; i < str.Length; i += maxChunkSize)
+                yield return str.Substring(i, Math.Min(maxChunkSize, str.Length - i));
         }
     }
 

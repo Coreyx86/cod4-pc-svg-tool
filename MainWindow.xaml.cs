@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using Ookii.Dialogs.Wpf;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,7 +23,6 @@ namespace COD4SaveTool
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string savefile = "killhouse.svg";
         private SaveHeader saveObj;
 
         public MainWindow()
@@ -29,26 +30,62 @@ namespace COD4SaveTool
             InitializeComponent();
         }
 
-        private void btnTest_Click(object sender, RoutedEventArgs e)
-        {
-            saveObj = new SaveHeader(savefile);
-
-            saveObj.ParseGameScripts();
-        }
-
         private void btnOpenSaveFile_Click(object sender, RoutedEventArgs e)
         {
-            saveObj = new SaveHeader(savefile);
+            txtGameScript.Document.Blocks.Clear();
 
-            saveObj.ParseGameScripts();
+            OpenFileDialog dialog = new OpenFileDialog();
 
-            txtGameScript.Document.Blocks.Add(new Paragraph(new Run(saveObj.gamescripts)));
+            if ((bool)dialog.ShowDialog())
+            {
+                //saveObj.LittleEndian = false;
 
-            labelFileName.Content = savefile;
+                try
+                {
+                    saveObj = new SaveHeader(dialog.FileName);
+                    saveObj.LittleEndian = radioPC.IsChecked.Value;
+
+                    saveObj.ParseGameScripts();
+                    txtGameScript.Document.Blocks.Add(new Paragraph(new Run(saveObj.gamescripts)));
+
+                    labelFileName.Content = dialog.SafeFileName;
+
+                    MessageBox.Show("Save game loaded");
+                }
+                catch
+                {
+                    MessageBox.Show("An exception was thrown when trying to parse this savegame. Please make sure that you are using a valid debug save game file for with the correct platform selected in the tool.");
+                }
+
+
+                
+            }
+
+            
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
+            if(saveObj != null)
+            {
+                saveObj.SaveGameScripts();
+            }
+        }
+
+        private void radioPC_Checked(object sender, RoutedEventArgs e)
+        {
+            if (saveObj != null)
+            {
+                saveObj.LittleEndian = radioPC.IsChecked.Value;
+            }
+        }
+
+        private void radioXbox_Checked(object sender, RoutedEventArgs e)
+        {
+            if (saveObj != null)
+            {
+                saveObj.LittleEndian = radioPC.IsChecked.Value;
+            }
         }
     }
 }
